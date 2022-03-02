@@ -49,8 +49,43 @@
     </p>
 
     <p>
-    I implemented this by performing n-1 iterations of the creation of intermediate linear interpolations and adding them to a ray, ending up with an array with a single element. We return this element as the point on the curve. 
+    I implemented this by performing n-1 iterations of the creation of intermediate linear interpolations and adding them to a ray, ending up with an array with a single element. We return this element as the point on the curve. Below is an illustration of the multiple steps of De Casteljau's algorithm and a comparison of different t values. 
     </p>
+
+        <div align="middle">
+      <table style="width=100%">
+         <tr>
+          <td>
+        <img src="p1_original.png" align="middle" width="400px" />
+        <figcaption align="middle">original.</figcaption>
+        </td>
+          <td>
+        <img src="p1_1step.png" align="middle" width="400px" />
+        <figcaption align="middle">1 Step.</figcaption>
+        </td>
+       </tr>
+       <tr>
+        <td>
+        <img src="p1_2step.png" align="middle" width="400px" />
+        <figcaption align="middle">2 Steps.</figcaption>
+        </td>
+        <td>
+        <img src="p1_3step.png" align="middle" width="400px" />
+        <figcaption align="middle">3 Steps.</figcaption>
+        </td>
+      </tr>
+        <tr>
+        <td>
+        <img src="p1_bezier_curve.png" align="middle" width="400px" />
+        <figcaption align="middle">1 Bezier Curve with standard t</figcaption>
+        </td>
+        <td>
+        <img src="p1_bezier_diff_t.png" align="middle" width="400px" />
+        <figcaption align="middle">with different t.</figcaption>
+        </td>
+      </tr>
+      </table>
+  </div>
 
     <h3 align="middle">Part 2: Bezier surfaces with separable 1D de Casteljau subdivision</h3>
 
