@@ -1,0 +1,286 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+
+<head>
+  <style>
+    body {
+      padding: 100px;
+      width: 1000px;
+      margin: auto;
+      text-align: left;
+      font-weight: 300;
+      font-family: 'Open Sans', sans-serif;
+      color: #121212;
+    }
+
+    h1,
+    h2,
+    h3,
+    h4 {
+      font-family: 'Source Sans Pro', sans-serif;
+    }
+  </style>
+  <title>CS 184 Mesh Editor</title>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <link href="https://fonts.googleapis.com/css?family=Open+Sans|Source+Sans+Pro" rel="stylesheet">
+</head>
+
+
+<body>
+
+  <h1 align="middle">CS 184: Computer Graphics and Imaging, Spring 2020</h1>
+  <h1 align="middle">Project 2: Mesh Editor</h1>
+  <h2 align="middle">Richard Wang, CS184-SP2022</h2>
+
+  <br><br>
+
+  <div>
+
+    <h2 align="middle">Overview</h2>
+    <p>This project is divided into two parts: The first part consists of approximating and interpolating Bezier curves and surface. The second deals with modeling surfaces with triangle meshes, specifically mesh processing actions such as edge splits and flips, vertex normals, and upsampling. This project applies basic geometric principles in order to engineer processes that preserve geometric structure as well as retain shape of the original geometry. </p>
+
+    <h2 align="middle">Section I: Bezier Curves and Surfaces</h2>
+
+    <h3 align="middle">Part 1: Bezier curves with 1D de Casteljau subdivision</h3>
+
+    <p>
+    De Casteljau's algorithm is an implementation of calculating Bezier curves utilizing linear interpolations. Given n points, we create n-1 intermediate control points which are determined by n-1 linear interpolations between the n points. l(pn, p(n+1), t) = (1 - t) * p(n) + t * p(n+1). After n-1 iterations we return the final point which is a point on the Bezier curve. 
+    </p>
+
+    <p>
+    I implemented this by performing n-1 iterations of the creation of intermediate linear interpolations and adding them to a ray, ending up with an array with a single element. We return this element as the point on the curve. 
+    </p>
+
+    <h3 align="middle">Part 2: Bezier surfaces with separable 1D de Casteljau subdivision</h3>
+
+    <p> 
+    We can extend Casteljau's algorithm to Bezier surfaces by interpolating along two horizontal dimensions of a set of n by n points. We perform Casteljau's algorithm for a line of n points along the x-axis with lerps with parameter t=u. Then, for the n points tha are produced we perform another iteration of Casteljau's algorithm along the y-axis for a different set of parameters t=v to produce a final point on a curve. 
+    </p>
+    <div align="middle">
+      <table style="width=100%">
+      	 <tr>
+          <td>
+    		<img src="p2_teapot.png" align="middle" width="800px" />
+    	  </td>
+    	 </tr>
+      </table>
+	</div>
+
+    <h2 align="middle">Section II: Sampling</h2>
+
+    <h3 align="middle">Part 3: Average normals for half-edge meshes</h3>
+    
+    <p> We calculate the average normals for a vertex by average weighting the normals of the neighboring triangles in the triangle mesh. We can determine this by traversing the half-edges that enter and exit the vertex. For one half-edge h, we can determine h the edge following this half-edge, h_next and determine area of the corresponding triangle by calculating the cross product of the two half-edges h and h_next. The cross product of two vectors gives us the normal to the triangle weighted by the area. We can take the area of the triangle to be half of this cross product. To get the next half-edge to iterate through, we set h to the twin of h_next and repeat the same steps, terminating when we reach the half-edge that we started with. The following diagram illustrates how we traverse the edges. </p>
+
+     <div align="middle">
+      <table style="width=100%">
+      	 <tr>
+          <td>
+    		<img src="p3_normalsdiagram.png" align="middle" width="400px" />
+    		<figcaption align="middle">Half Edge Traversal</figcaption>
+    	  </td>
+    	 </tr>
+      </table>
+	</div>
+
+	<p>
+	 The following shows the same teapot object with and without shading. As you can see with the normals, the colors produce a gradient which give the teapot a 3D structure. 
+	</p>
+     <div align="middle">
+      <table style="width=100%">
+      	 <tr>
+          <td>
+    		<img src="p3_without_shading.png" align="middle" width="400px" />
+    		<figcaption align="middle">No Shading</figcaption>
+    	  </td>
+    	  <td>
+    		<img src="p3_withshading.png" align="middle" width="400px" />
+    		<figcaption align="middle">Shading</figcaption>
+    	  </td>
+    	 </tr>
+      </table>
+	</div>
+
+    <h3 align="middle">Part 4: Half-edge flip</h3>
+    In order to implement the edge flip operation, we need to reassign the pointers for the half-edges, edges, faces. Because edge flipping preserves the number of edges and vertices, it suffices to reassign pointers instead of determining edges or vertices. First we flip the center edge from BC to AD and reassign the half-edge pointers.  In order to debug this method, I referred to a diagram on <a href="https://piazza.com/class/kyerpad7ymj4rl?cid=203_f6">piazza</a> that listed all of pointers for half-edges as shown below. I listed out all of the half-edges and vertices and the pointer reassignments that were necessary. To debug, I kept double checking with these half-edges and vertex pointer reassignments. 
+
+	<div align="middle">
+      <table style="width=100%">
+      	 <tr>
+          <td>
+    		<img src="edge_flip_diagram.png" align="middle" width="600px" />
+    	  </td>
+    	  <tr>
+	 </table>
+	</div>
+
+	<p>
+		The following are several screenshots of edge flips. As we can see, there is one case with a degenerate case where one triangle is darker than the others. 
+	</p>
+    <div align="middle">
+      <table style="width=100%">
+      	 <tr>
+          <td>
+    		<img src="p4_noflip.png" align="middle" width="600px" />
+    	  </td>
+    	  <tr>
+    	    <td>
+    		<img src="p4_edgeflip1.png" align="middle" width="600px" />
+    	  </td>
+    	</tr>
+    	 </tr>
+    	 <tr>
+    	  <td>
+    		<img src="p4_edgeflip2.png" align="middle" width="600px" />
+    	  </td>
+    	</tr>
+      </table>
+	</div>
+    
+   
+
+    <h3 align="middle">Part 5: Half-edge split</h3>
+
+    <p>
+    Similar to the edge flip method, the half-edge splitting edge was an arduous book-keeping procedure that requires quite pointer reassignments than half-edge flipping. Once again, I drew a diagram of the new vertex and new edges required for this task and listed out which were new and which was more involved than than edge flipping as it requires additions of vertices and edges. The following diagram was used for the task:
+    </p>
+
+ 	<div align="middle">
+      <table style="width=100%">
+      	 <tr>
+          <td>
+    		<img src="splitdiagram.png" align="middle" width="400px" />
+    		<figcaption align="middle">No Splits.</figcaption>
+    	  </td>
+    	</tr>
+    </table>
+   </div>
+
+Below is an illustration of of various levels of splits. The last image is a combination of edge splits and flips. 
+    <div align="middle">
+      <table style="width=100%">
+      	 <tr>
+          <td>
+    		<img src="p5_nosplit.png" align="middle" width="400px" />
+    		<figcaption align="middle">No Splits.</figcaption>
+    	  </td>
+    	    <td>
+    		<img src="p5_split1.png" align="middle" width="400px" />
+    		<figcaption align="middle">1 Split.</figcaption>
+    	  </td>
+    	 </tr>
+    	 <tr>
+    	  <td>
+    		<img src="p5_split2.png" align="middle" width="400px" />
+    		<figcaption align="middle">2 Splits.</figcaption>
+    	  </td>
+    	  <td>
+    		<img src="p5_splitandflip.png" align="middle" width="400px" />
+    		<figcaption align="middle">Combinations of Splits and Edge Flips.</figcaption>
+    	  </td>
+    	</tr>
+      </table>
+	</div>
+
+    <h3 align="middle">Part 6: Loop subdivision for mesh upsampling</h3>
+
+    <p>
+    	Briefly explain how you implemented the loop subdivision and describe any interesting implementation / debugging tricks you have used.
+
+        In order to implement loop subdivision, I followed the recommendations and pseudocode provided to us. First, I calculated new positions for vertices and edges using the loop subdivision formula.
+
+        For newly created vertices created on edge BC with edge AD perpendicular, the position of the new vertex is:<br>
+        <br>
+        3/8 (B + C) + 1/8 (A + D). <br>
+        <br>
+        For old vertices, it is a weighted average of the old vertex location and the locations of neighboring vertices:<br>
+        <br>
+        (1 - nu) * original_position + u * sum_of_original_neighbor_positions. <br>
+        <br>
+        where n is the degree of our vertex and u = 3/16 if n = 3, 3/8n otherwise <br>
+        <br>
+         In order to keep my code clean, I followed the recommendation to first calculate the new locations of vertices and edges and then proceed with splitting. I looped through and split every edge ensuring that we only split edges connecting vertices of the old mesh. In split edge, I kept track of all new vertices and new edges that were created by using the isNew flag. The middle vertex and two of the edges connecting the middle vertex to the corners are flagged as new. From then, we proceed to flip every edge that connects an old and new vertex. Finally, we copy the new position of the vertices into the vertex's actual positon. 
+
+        The upsampling method itself was straightforward to write, however debugging it required me to go back to split edge and debug that method. Even though splitedge looked as if it were working properly, I had issues with assigning pointers and isNew flags. Debugging this method was simply a matter of good book-keeping and diagramming. 
+    </p>
+<p>
+We can observe below the effects upsampling on our triangle mesh. We can see that upsampling has the effect of smoothing out edges and sharpening corners. As we can see in the teapot example below, upsampling causes the teapot spout have a sharper edge and the curved handle to have a smoother edge. This effect cannot be reduced by splitting certain edges since we split edges anyway in the upsampling algorithm. Splitting edges only generates more triangles which smooths out our image. 
+</p>
+
+
+  <div align="middle">
+      <table style="width=100%">
+      	 <tr>
+          <td>
+    		<img src="p6_teapot_0upsample.png" align="middle" width="400px" />
+    		<figcaption align="middle">0 upsample on Teapot.</figcaption>
+    	  </td>
+    	    <td>
+    		<img src="p6_teapot_1upsample.png" align="middle" width="400px"/>
+    		<figcaption align="middle">1 upsample on Teapot.</figcaption>
+    	  </td>
+    	 </tr>
+    	 <tr>
+    	  <td>
+    		<img src="p6_teapot_2upsample.png" align="middle" width="400px" />
+    		<figcaption align="middle">2 upsamples on Teapot.</figcaption>
+    	  </td>
+      </table>
+	</div>
+<p>
+Below is cube.dae on several levels of upsampling. as you can see, the cube becomes slightly asymmetric after repeated repeated subdivisions. In order to fix this symmetry, I found that splitting the original edge first before performing upsampling creates a more symmetric upsampled object. I theorize this is the case since initially we only split along one edge, so the creation of new edges that will in turn be flipped will only be along one dimension. 
+    </p>
+
+  <div align="middle">
+      <table style="width=100%">
+      	 <tr>
+          <td>
+    		<img src="p6_cube_0upsample.png" align="middle" width="400px" />
+    		<figcaption align="middle">0 upsample.</figcaption>
+    	  </td>
+    	    <td>
+    		<img src="p6_1upsample.png" align="middle" width="400px"/>
+    		<figcaption align="middle">1 upsample.</figcaption>
+    	  </td>
+    	 </tr>
+    	 <tr>
+    	  <td>
+    		<img src="p6_2upsample.png" align="middle" width="400px" />
+    		<figcaption align="middle">2 upsamples.</figcaption>
+    	  </td>
+    	  <td>
+    		<img src="p6_3upsample.png" align="middle" width="400px" />
+    		<figcaption align="middle">3 upsamples.</figcaption>
+    	  </td>
+    	  </tr>
+    	  <tr>
+    	   <td>
+    		<img src="p6_4upsample.png" align="middle" width="400px" />
+    		<figcaption align="middle">4 upsamples.</figcaption>
+    	  </td>
+    	   <td>
+    		<img src="p6_splitbefore_upsample.png" align="middle" width="400px" />
+    		<figcaption align="middle">Splitting before Upsampling".</figcaption>
+    	  </td>
+    	</tr>
+    	  <tr>
+    	   <td>
+    		<img src="p6_sym_upsample1.png" align="middle" width="400px" />
+    		<figcaption align="middle">1 Upsample after Split.</figcaption>
+    	  </td>
+    	   <td>
+    		<img src="p6_sym_upsample2.png" align="middle" width="400px" />
+    		<figcaption align="middle">2 Upsample after Split".</figcaption>
+    	  </td>
+    	</tr>
+      </table>
+	</div>
+
+    <h2 align="middle">Section III: Optional Extra Credit</h2>
+    <p>If you are not participating in the optional mesh competition, don't worry about this section!</p>
+
+    <h3 align="middle">Part 7: Design your own mesh!</h3>
+
+</body>
+
+</html>
